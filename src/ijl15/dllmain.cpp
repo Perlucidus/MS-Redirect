@@ -3,7 +3,7 @@
 #include "ijl15.h"
 #include "winsock.h"
 #include "settings.h"
-#include "window.h"
+#include "winapi.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -43,9 +43,10 @@ void Initialize() {
 	try {
 		redirect_ijl_calls(); // Redirect ijl15 calls to original library
 		redirect_winsock(); // Hook Connect/GetPeerName
-		hook_window(); // Hook CreateWindowEx
+		hook_load_library();
+		hook_create_window(); // Hook CreateWindowEx
 		if (DISABLE_MUTEX)
-			hook_mutex(); // Hook CreateMutex
+			hook_create_mutex(); // Hook CreateMutex
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;

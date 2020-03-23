@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "window.h"
+#include "winapi.h"
 #include "detours_util.h"
 #include "settings.h"
 #include "bypass.h"
@@ -9,7 +9,28 @@
 
 using namespace std;
 
-void hook_window()
+void hook_load_library()
+{
+	HMODULE hModule = LoadLibraryA("KERNEL32");
+	if (!hModule)
+		throw exception("Could not load KERNEL32");
+	static auto _LoadLibraryA = decltype(&LoadLibraryA)(GetProcAddress(hModule, "LoadLibraryA"));
+	decltype(&LoadLibraryA) Hook = [](LPCSTR lpLibFileName) -> HMODULE
+	{
+		if (!strcmp(lpLibFileName, "setupapi.dll") || !strcmp(lpLibFileName, "cfgmgr32.dll"))
+		{
+			cout << "LoadLibrary " << lpLibFileName << " blocked" << endl;
+			return NULL;
+		}
+		else if (!strcmp(lpLibFileName, "ws2_32.dll"))
+			cout << "LoadLibrary " << lpLibFileName << endl;
+		return _LoadLibraryA(lpLibFileName);
+	};
+	if (!SetHook(true, reinterpret_cast<void**>(&_LoadLibraryA), Hook))
+		throw exception("Failed to hook LoadLibraryA");
+}
+
+void hook_create_window()
 {
 	HMODULE hModule = LoadLibraryA("USER32");
 	if (!hModule)
@@ -37,7 +58,7 @@ void hook_window()
 		throw exception("Failed to hook CreateWindowExA");
 }
 
-void hook_mutex()
+void hook_create_mutex()
 {
 	HMODULE hModule = LoadLibraryA("KERNEL32");
 	if (!hModule)

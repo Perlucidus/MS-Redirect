@@ -39,7 +39,7 @@
     <ClInclude Include="bypass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="window.h">
+    <ClInclude Include="winapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,7 +62,7 @@
     <ClCompile Include="bypass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="window.cpp">
+    <ClCompile Include="winapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
