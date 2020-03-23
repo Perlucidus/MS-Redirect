@@ -43,14 +43,15 @@ void Initialize() {
 	ss << "PID: " << pid;
 	SetConsoleTitleA(ss.str().c_str());
 	try {
+		srand(pid);
 		redirect_ijl_calls(); // Redirect ijl15 calls to original library
 		redirect_winsock(); // Hook Connect/GetPeerName
 		hook_load_library(); // Hook LoadLibrary
 		hook_create_window(); // Hook CreateWindowEx
 		if (DISABLE_MUTEX)
 			hook_create_mutex(); // Hook CreateMutex
-		//hook_hshield();
-		hook_wz_crypto();
+		//hook_hshield(); // HShield emulator (not completed)
+		hook_wz_crypto(); // Hook WzRSAEncryptString
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;

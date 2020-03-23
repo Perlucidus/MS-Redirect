@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void Hook_WriteStageLogA()
+void Hook_WzRSAEncryptString()
 {
 	HMODULE hModule = LoadLibraryA("WZCrypto.dll");
 	if (!hModule)
@@ -20,12 +20,12 @@ void Hook_WriteStageLogA()
 		cout << "WzRSAEncryptString " << text << endl;
 		return 0;
 	};
-	cout << "Redirecting WzRSAEncryptString to " << Hook << endl;
+	cout << "Redirect WzRSAEncryptString\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_WzRSAEncryptString), Hook))
 		throw exception("Failed to hook WzRSAEncryptString");
 }
 
 void hook_wz_crypto()
 {
-	Hook_WriteStageLogA();
+	Hook_WzRSAEncryptString();
 }

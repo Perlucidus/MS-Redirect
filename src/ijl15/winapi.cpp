@@ -26,7 +26,7 @@ void hook_load_library()
 			cout << "LoadLibrary " << lpLibFileName << endl;
 		return _LoadLibraryA(lpLibFileName);
 	};
-	cout << "Redirecting LoadLibraryA to " << Hook << endl;
+	cout << "Redirect LoadLibraryA\t\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_LoadLibraryA), Hook))
 		throw exception("Failed to hook LoadLibraryA");
 }
@@ -64,7 +64,7 @@ void hook_create_process()
 			lpProcessInformation
 		);
 	};
-	cout << "Redirecting CreateProcessA to " << Hook << endl;
+	cout << "Redirect CreateProcessA\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_CreateProcessA), Hook))
 		throw exception("Failed to hook CreateProcessA");
 }
@@ -74,7 +74,6 @@ void hook_create_window()
 	HMODULE hModule = LoadLibraryA("USER32");
 	if (!hModule)
 		throw exception("Could not load USER32");
-	cout << "USER32 loaded with hModule: " << hModule << endl;
 	static auto _CreateWindowExA = decltype(&CreateWindowExA)(GetProcAddress(hModule, "CreateWindowExA"));
 	decltype(&CreateWindowExA) Hook = [](DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) -> HWND
 	{
@@ -86,6 +85,7 @@ void hook_create_window()
 			if (err = WSAStartup(MAKEWORD(2, 2), &wsaData))
 				cout << "WSAStartup failed with error " << err << endl;
 			bypass();
+			cout << "CreateWindowEx StartUpDlgClass" << endl;
 			return NULL; // Skip startup
 		}
 		else if (!strcmp(lpClassName, "NexonADBallon"))
@@ -97,7 +97,7 @@ void hook_create_window()
 		}
 		return _CreateWindowExA(dwExStyle, lpClassName, lpLocalWndName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 	};
-	cout << "Redirecting CreateWindowExA to " << Hook << endl;
+	cout << "Redirect CreateWindowExA\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_CreateWindowExA), Hook))
 		throw exception("Failed to hook CreateWindowExA");
 }
@@ -117,7 +117,7 @@ void hook_create_mutex()
 		}
 		return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
 	};
-	cout << "Redirecting CreateMutexA to " << Hook << endl;
+	cout << "Redirect CreateMutexA\t\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_CreateMutexA), Hook))
 		throw exception("Failed to hook CreateMutexA");
 }

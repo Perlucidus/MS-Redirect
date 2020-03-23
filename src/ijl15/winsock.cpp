@@ -53,20 +53,19 @@ void redirect_winsock()
 	HMODULE hModule = LoadLibraryA("MSWSOCK");
 	if (!hModule)
 		throw exception("Could not load MSWSOCK");
-	cout << "MSWSOCK loaded with hModule: " << hModule << endl;
 	static auto _WSPStartup = decltype(&WSPStartup)(GetProcAddress(hModule, "WSPStartup"));
 	decltype(&WSPStartup) Hook = [](WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable) -> int
 	{
 		int ret = _WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
 		WSPProcTable = *lpProcTable;
-		cout << "found WSPProcTable at " << lpProcTable << endl;
 		lpProcTable->lpWSPConnect = Connect; // Redirect Connection
-		cout << "Redirected WSPConnect to " << Connect << endl;
 		lpProcTable->lpWSPGetPeerName = GetPeerName; // Redirect GetPeerName
-		cout << "Redirected WSPGetPeerName to " << GetPeerName << endl;
+		cout << "WSPProcTable@" << lpProcTable << endl;
+		cout << "Redirect WSPConnect\t\t" << Connect << endl;
+		cout << "Redirect WSPGetPeerName\t\t" << GetPeerName << endl;
 		return ret;
 	};
-	cout << "Redirecting WSPStartup to " << Hook << endl;
+	cout << "Redirect WSPStartup\t\t" << Hook << endl;
 	if (!SetHook(true, reinterpret_cast<void**>(&_WSPStartup), Hook))
 		throw exception("Failed to hook WSPStartup");
 }

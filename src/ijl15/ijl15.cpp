@@ -52,17 +52,16 @@ void redirect_ijl_calls()
 	HMODULE hModule = LoadLibraryA("ijl15");
 	if (!hModule)
 		throw exception("Failed to load ijl15");
-	cout << "ijl15 loaded with hModule " << hModule << endl;
 	ijlGetLibVersion_proc = GetProcAddress(hModule, "ijlGetLibVersion");
 	ijlInit_proc = GetProcAddress(hModule, "ijlInit");
 	ijlFree_proc = GetProcAddress(hModule, "ijlFree");
 	ijlRead_proc = GetProcAddress(hModule, "ijlRead");
 	ijlWrite_proc = GetProcAddress(hModule, "ijlWrite");
 	ijlErrorStr_proc = GetProcAddress(hModule, "ijlErrorStr");
-	cout << "Redirected ijlGetLibVersion to " << ijlGetLibVersion_proc << endl;
-	cout << "Redirected ijlInit to " << ijlInit_proc << endl;
-	cout << "Redirected ijlFree to " << ijlFree_proc << endl;
-	cout << "Redirected ijlRead to " << ijlRead_proc << endl;
-	cout << "Redirected ijlWrite to " << ijlWrite_proc << endl;
-	cout << "Redirected ijlErrorStr to " << ijlErrorStr_proc << endl;
+	cout << "Redirect ijlGetLibVersion\t" << ijlGetLibVersion_proc << endl;
+	cout << "Redirect ijlInit\t\t" << ijlInit_proc << endl;
+	cout << "Redirect ijlFree\t\t" << ijlFree_proc << endl;
+	cout << "Redirect ijlRead\t\t" << ijlRead_proc << endl;
+	cout << "Redirect ijlWrite\t\t" << ijlWrite_proc << endl;
+	cout << "Redirect ijlErrorStr\t\t" << ijlErrorStr_proc << endl;
 }
