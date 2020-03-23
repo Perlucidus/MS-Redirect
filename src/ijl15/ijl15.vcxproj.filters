@@ -36,10 +36,16 @@
     <ClInclude Include="settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bypass.h">
+    <ClInclude Include="winapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="winapi.h">
+    <ClInclude Include="memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hshield.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wzcrypto.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,10 +65,16 @@
     <ClCompile Include="detours_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bypass.cpp">
+    <ClCompile Include="winapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="winapi.cpp">
+    <ClCompile Include="memory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hshield.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wzcrypto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

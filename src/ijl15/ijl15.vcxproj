@@ -148,7 +148,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="bypass.h" />
+    <ClInclude Include="hshield.h" />
+    <ClInclude Include="memory.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detours_util.h" />
     <ClInclude Include="ijl15.h" />
@@ -157,9 +158,11 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="winapi.h" />
     <ClInclude Include="winsock.h" />
+    <ClInclude Include="wzcrypto.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bypass.cpp" />
+    <ClCompile Include="hshield.cpp" />
+    <ClCompile Include="memory.cpp" />
     <ClCompile Include="detours_util.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ijl15.cpp" />
@@ -171,6 +174,7 @@
     </ClCompile>
     <ClCompile Include="winapi.cpp" />
     <ClCompile Include="winsock.cpp" />
+    <ClCompile Include="wzcrypto.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="detours.lib" />

@@ -24,10 +24,10 @@ int WINAPI GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpE
 	if (nPort == PORT)
 	{
 		service->sin_addr.S_un.S_addr = inet_addr(NEXON_IP);
-		cout << "WSPGetPeerName redirected to " << NEXON_IP << endl;
+		cout << "WSPGetPeerName redirected to " << NEXON_IP << ":" << nPort << endl;
 	}
 	else
-		cout << "WSPGetPeerName from " << szAddr << endl;
+		cout << "WSPGetPeerName from " << szAddr << ":" << nPort << endl;
 	return nRet;
 }
 
@@ -37,13 +37,14 @@ int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF 
 	DWORD dwLen = 50;
 	WSAAddressToStringA((sockaddr*)name, namelen, NULL, szAddr, &dwLen);
 	sockaddr_in* service = (sockaddr_in*)name;
-	if (strstr(szAddr, SEARCH_IP)) // Contains SEARCH_IP
+	u_short nPort = ntohs(service->sin_port);
+	if (strstr(szAddr, SEARCH_IP) || nPort == 8484) // Contains SEARCH_IP
 	{
 		service->sin_addr.S_un.S_addr = inet_addr(HOST_IP);
-		cout << "WSPConnect redirected to " << HOST_IP << endl;
+		cout << "WSPConnect redirected to " << HOST_IP << ":" << nPort << endl;
 	}
 	else
-		cout << "WSPConnect from " << szAddr;
+		cout << "WSPConnect from " << szAddr << ":" << nPort;
 	return WSPProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
