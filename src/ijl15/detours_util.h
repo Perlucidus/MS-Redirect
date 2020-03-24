@@ -4,4 +4,6 @@
 
 #include <windef.h>
 
-BOOL SetHook(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour);
+BOOL Detour(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour);
+VOID Detour(PVOID* ppvTarget, PVOID pvDetour);
+HMODULE LoadLibraryS(LPCSTR lpLibFileName);

@@ -2,6 +2,7 @@
 #include "hshield.h"
 #include "detours_util.h"
 #include <thread>
+#include <strsafe.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -14,34 +15,8 @@ bool heartbeat = false;
 bool service = false;
 AhnHS_Callback _AhnHS_Callback = 0;
 
-int __stdcall _AhnHS_CallbackProc(void)
+int __stdcall AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error)
 {
-	if (_AhnHS_Callback)
-	{
-		try
-		{
-			while (unsigned int status = HS_RUNNING_STATUS_CHECK_MONITORING_THREAD)
-			{
-				_AhnHS_Callback(AHNHS_ACTAPC_STATUS_HACKSHIELD_RUNNING, sizeof(unsigned int), &status);
-				this_thread::sleep_for(chrono::seconds(25));
-			}
-		}
-		catch (exception const& ex)
-		{
-			cout << "_AhnHS_CallbackProc: " << ex.what() << endl;
-		}
-	}
-	return 0;
-}
-
-void hook_hshield()
-{
-	HMODULE hModule = LoadLibraryA("HShield/ehsvc.dll");
-	if (!hModule)
-		throw exception("Could not load HShield/ehsvc.dll");
-	static auto _AhnHS_ServiceDispatch = (AhnHS_ServiceDispatch)(GetProcAddress(hModule, (LPCSTR)10));
-	AhnHS_ServiceDispatch Hook = [](unsigned int code, void** params, unsigned int* error) -> int
-	{
 		*error = HS_ERR_OK;
 		switch (code) {
 		case HS_Initialize:
@@ -89,8 +64,101 @@ void hook_hshield()
 			break;
 		}
 		return 1;
+}
+
+int __stdcall _AhnHS_CallbackProc()
+{
+	if (_AhnHS_Callback)
+	{
+		try
+		{
+			while (unsigned int status = HS_RUNNING_STATUS_CHECK_MONITORING_THREAD)
+			{
+				_AhnHS_Callback(AHNHS_ACTAPC_STATUS_HACKSHIELD_RUNNING, sizeof(unsigned int), &status);
+				this_thread::sleep_for(chrono::seconds(25));
+			}
+		}
+		catch (exception const& ex)
+		{
+			cout << "_AhnHS_CallbackProc: " << ex.what() << endl;
+		}
+	}
+	return 0;
+}
+
+
+void detourCreateProcess()
+{
+	HMODULE hModule = LoadLibraryS("KERNEL32");
+	static auto _CreateProcessA = decltype(&CreateProcessA)(GetProcAddress(hModule, "CreateProcessA"));
+	decltype(&CreateProcessA) Hook = [](
+		LPCSTR lpApplicationName,
+		LPSTR lpCommandLine,
+		LPSECURITY_ATTRIBUTES lpProcessAttributes,
+		LPSECURITY_ATTRIBUTES lpThreadAttributes,
+		BOOL bInheritHandles,
+		DWORD dwCreationFlags,
+		LPVOID lpEnvironment,
+		LPCSTR lpCurrentDirectory,
+		LPSTARTUPINFOA lpStartupInfo,
+		LPPROCESS_INFORMATION lpProcessInformation
+		) -> BOOL
+	{
+		if (lpCommandLine) {
+			bool hsupdate = strstr(lpCommandLine, "HSUpdate.exe");
+			bool autoup = strstr(lpCommandLine, "autoup.exe");
+			if (hsupdate || autoup) {
+				if (hsupdate) {
+					HANDLE hEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE,
+						"Global\\EF81BA4B-4163-44f5-90E2-F05C1E49C12D");
+					SetEvent(hEvent);
+					CloseHandle(hEvent);
+				}
+				char lpszFilePath[256];
+				StringCchCopy(lpszFilePath + GetSystemDirectory(lpszFilePath, 256), 256, "\\svchost.exe");
+				return _CreateProcessA(lpszFilePath, const_cast<char*>("svchost.exe"),
+					NULL, NULL, FALSE, dwCreationFlags, NULL, NULL, lpStartupInfo, lpProcessInformation);
+			}
+		}
+		cout << "CreateProcess " << lpCommandLine << endl;
+		return _CreateProcessA(
+			lpApplicationName,
+			lpCommandLine,
+			lpProcessAttributes,
+			lpThreadAttributes,
+			bInheritHandles,
+			dwCreationFlags,
+			lpEnvironment,
+			lpCurrentDirectory,
+			lpStartupInfo,
+			lpProcessInformation
+		);
 	};
-	cout << "Redirect AhnHS_ServiceDispatch\t" << Hook << endl;
-	if (!SetHook(true, reinterpret_cast<void**>(&_AhnHS_ServiceDispatch), Hook))
-		throw exception("Failed to hook AhnHS_ServiceDispatch");
+	cout << "Redirect CreateProcessA\t" << Hook << endl;
+	try {
+		Detour(reinterpret_cast<void**>(&_CreateProcessA), Hook);
+	}
+	catch (runtime_error e) {
+		cout << "Failed to detour CreateProcessA" << endl;
+		throw;
+	}
+}
+
+void detourAhnHS_ServiceDispatch() {
+	HMODULE hModule = LoadLibraryS("HShield/ehsvc.dll");
+	static auto _AhnHS_ServiceDispatch = (AhnHS_ServiceDispatch)(GetProcAddress(hModule, (LPCSTR)10));
+	cout << "Redirect AhnHS_ServiceDispatch\t" << AhnHS_ServiceDispatch_Hook << endl;
+	try {
+		Detour(reinterpret_cast<void**>(&_AhnHS_ServiceDispatch), AhnHS_ServiceDispatch_Hook);
+	}
+	catch (runtime_error e) {
+		cout << "Failed to detour AhnHS_ServiceDispatch" << endl;
+		throw;
+	}
+}
+
+void hshield_bypass()
+{
+	detourCreateProcess();
+	detourAhnHS_ServiceDispatch();
 }

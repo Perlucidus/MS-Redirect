@@ -1,8 +1,14 @@
 #include "stdafx.h"
 #include "detours_util.h"
 #include "detours.h"
+#include <stdexcept>
+#include <string>
+#include <sstream>
+#include <iostream>
 
-BOOL SetHook(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
+using namespace std;
+
+BOOL Detour(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
 {
 	if (DetourTransactionBegin() != NO_ERROR)
 		return FALSE;
@@ -16,4 +22,25 @@ BOOL SetHook(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
 	}
 	DetourTransactionAbort();
 	return FALSE;
+}
+
+VOID Detour(PVOID* ppvTarget, PVOID pvDetour)
+{
+	if (!Detour(true, ppvTarget, pvDetour)) {
+		ostringstream oss;
+		oss << "Could not detour " << ppvTarget << " to " << pvDetour;
+		throw runtime_error(oss.str());
+	}
+}
+
+HMODULE LoadLibraryS(LPCSTR lpLibFileName)
+{
+	HMODULE hModule = LoadLibrary(lpLibFileName);
+	if (!hModule) {
+		ostringstream oss;
+		oss << "Could not load module ";
+		oss << lpLibFileName;
+		throw runtime_error(oss.str());
+	}
+	return hModule;
 }

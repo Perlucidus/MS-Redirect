@@ -77,4 +77,11 @@ enum HS_ServiceDispatchCode : int {
 	HS_CheckHackShieldRunningStatus = 34
 };
 
-void hook_hshield();
+int __stdcall AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error);
+int __stdcall _AhnHS_CallbackProc();
+
+//Hide functions
+//void detourCreateProcess();
+//void detourAhnHS_ServiceDispatch();
+
+void hshield_bypass();

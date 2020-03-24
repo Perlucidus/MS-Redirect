@@ -48,11 +48,9 @@ int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF 
 	return WSPProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
-void redirect_winsock()
+void detourWSPStartup()
 {
-	HMODULE hModule = LoadLibraryA("MSWSOCK");
-	if (!hModule)
-		throw exception("Could not load MSWSOCK");
+	HMODULE hModule = LoadLibraryS("MSWSOCK");
 	static auto _WSPStartup = decltype(&WSPStartup)(GetProcAddress(hModule, "WSPStartup"));
 	decltype(&WSPStartup) Hook = [](WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable) -> int
 	{
@@ -66,6 +64,11 @@ void redirect_winsock()
 		return ret;
 	};
 	cout << "Redirect WSPStartup\t\t" << Hook << endl;
-	if (!SetHook(true, reinterpret_cast<void**>(&_WSPStartup), Hook))
-		throw exception("Failed to hook WSPStartup");
+	try {
+		Detour(reinterpret_cast<void**>(&_WSPStartup), Hook);
+	}
+	catch (runtime_error e) {
+		cout << "Failed to detour WSPStartup" << endl;
+		throw;
+	}
 }

@@ -45,13 +45,13 @@ void Initialize() {
 	try {
 		srand(pid);
 		redirect_ijl_calls(); // Redirect ijl15 calls to original library
-		redirect_winsock(); // Hook Connect/GetPeerName
-		hook_load_library(); // Hook LoadLibrary
-		hook_create_window(); // Hook CreateWindowEx
+		detourWSPStartup(); // Detour Connect/GetPeerName
+		detourLoadLibrary(); // Detour LoadLibrary
+		detourCreateWindowEx(); // Detour CreateWindowEx
 		if (DISABLE_MUTEX)
-			hook_create_mutex(); // Hook CreateMutex
+			detourCreateMutex(); // Detour CreateMutex
 		//hook_hshield(); // HShield emulator (not completed)
-		hook_wz_crypto(); // Hook WzRSAEncryptString
+		detourWzRSAEncryptString(); // Detour WzRSAEncryptString
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;

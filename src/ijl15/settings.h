@@ -12,3 +12,4 @@ constexpr const char* NEXON_IP = "203.116.196.8";
 constexpr const char* WINDOW_NAME = HOST_IP;
 
 constexpr bool DISABLE_MUTEX = true;
+const HANDLE FAKE_MUTEX_HANDLE = (HANDLE)123456;
