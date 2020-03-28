@@ -64,8 +64,10 @@ void detourCreateWindowEx()
 			cout << "CreateWindowEx StartUpDlgClass" << endl;
 			return NULL; // Skip startup
 		}
-		else if (!strcmp(lpClassName, "NexonADBallon"))
+		else if (!strcmp(lpClassName, "NexonADBallon")) {
+			cout << "NexonADBallon" << endl;
 			return NULL; // Skip ad
+		}
 		else if (!strcmp(lpClassName, "MapleStoryClass"))
 		{
 			lpLocalWndName = WINDOW_NAME; // Set window name
