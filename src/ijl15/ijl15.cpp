@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 #include "ijl15.h"
+#include "ijl15_raw.h"
+#include "MemoryModule.h"
 #include <Windows.h>
 #include <iostream>
 #include <stdexcept>
@@ -49,15 +51,15 @@ void ijlErrorStr()
 
 void redirect_ijl_calls()
 {
-	HMODULE hModule = LoadLibraryA("ijl15");
-	if (!hModule)
+	HMEMORYMODULE hMemoryModule = MemoryLoadLibrary(ijl15_data, sizeof(ijl15_data));
+	if (!hMemoryModule)
 		throw exception("Failed to load ijl15");
-	ijlGetLibVersion_proc = GetProcAddress(hModule, "ijlGetLibVersion");
-	ijlInit_proc = GetProcAddress(hModule, "ijlInit");
-	ijlFree_proc = GetProcAddress(hModule, "ijlFree");
-	ijlRead_proc = GetProcAddress(hModule, "ijlRead");
-	ijlWrite_proc = GetProcAddress(hModule, "ijlWrite");
-	ijlErrorStr_proc = GetProcAddress(hModule, "ijlErrorStr");
+	ijlGetLibVersion_proc = MemoryGetProcAddress(hMemoryModule, "ijlGetLibVersion");
+	ijlInit_proc = MemoryGetProcAddress(hMemoryModule, "ijlInit");
+	ijlFree_proc = MemoryGetProcAddress(hMemoryModule, "ijlFree");
+	ijlRead_proc = MemoryGetProcAddress(hMemoryModule, "ijlRead");
+	ijlWrite_proc = MemoryGetProcAddress(hMemoryModule, "ijlWrite");
+	ijlErrorStr_proc = MemoryGetProcAddress(hMemoryModule, "ijlErrorStr");
 	cout << "Redirect ijlGetLibVersion\t" << ijlGetLibVersion_proc << endl;
 	cout << "Redirect ijlInit\t\t" << ijlInit_proc << endl;
 	cout << "Redirect ijlFree\t\t" << ijlFree_proc << endl;
