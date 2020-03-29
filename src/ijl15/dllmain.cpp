@@ -48,13 +48,13 @@ void Initialize() {
 	try {
 		redirect_ijl_calls(); // Redirect ijl15 calls to original library
 		detourWSPStartup(); // Detour Connect/GetPeerName
-		detourLoadLibrary(); // Detour LoadLibrary
 		detourCreateWindowEx(); // Detour CreateWindowEx
+		//detourFindFirstFile(); // Detour FindFirstFile
+		detourGetModuleFileName(); // Detour GetModileFileName
 		if (DISABLE_MUTEX)
 			detourCreateMutex(); // Detour CreateMutex
 		//hook_hshield(); // HShield emulator (not completed)
 		detourWzRSAEncryptString(); // Detour WzRSAEncryptString
-		bypass_file_check();
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;

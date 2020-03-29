@@ -47,9 +47,9 @@ void __declspec(naked) MSCRCMainHook()
 		jmp OriginMain
 
 		OriginMain: //Original 7 Opcodes (2 nops are added on hijack)
-		push[edx]
-		jmp[loc_1053E59]
-		jmp[MSCRCMainRet]
+		push [edx]
+		jmp loc_1053E59
+		jmp MSCRCMainRet //Not really required here but for future ref
 	}
 }
 
@@ -95,19 +95,19 @@ void bypass()
 	MEMORY_BASIC_INFORMATION mbi;
 	VirtualQuery((void*)MSCRC_START, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
 	MSCRC_END = MSCRC_START + mbi.RegionSize;
-	//Allocate some space for the unmodified memory
+	//Allocate space for the memory copy
 	DWORD MSCRC_MAIN_RANGE1 = MSCRC_MAIN_END1 - MSCRC_MAIN_START1;
 	DWORD MSCRC_MAIN_RANGE2 = MSCRC_MAIN_END2 - MSCRC_MAIN_START2;
 	DWORD MSCRC_RANGE = MSCRC_END - MSCRC_START;
 	crcmainbuffer1 = VirtualAlloc(NULL, MSCRC_MAIN_RANGE1, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	crcmainbuffer2 = VirtualAlloc(NULL, MSCRC_MAIN_RANGE2, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	crcbuffer = VirtualAlloc(NULL, MSCRC_RANGE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	//Unprotect MS' memory
+	//Unprotect memory
 	unsigned long ulProtect;
 	VirtualProtect((void*)MSCRC_MAIN_START1, MSCRC_MAIN_RANGE1, PAGE_EXECUTE_READWRITE, &ulProtect);
 	VirtualProtect((void*)MSCRC_MAIN_START2, MSCRC_MAIN_RANGE2, PAGE_EXECUTE_READWRITE, &ulProtect);
 	VirtualProtect((void*)MSCRC_START, MSCRC_RANGE, PAGE_EXECUTE_READWRITE, &ulProtect);
-	//Copy the original, unedited memory
+	//Make a copy of the memory
 	memcpy(crcmainbuffer1, (void*)MSCRC_MAIN_START1, MSCRC_MAIN_RANGE1);
 	memcpy(crcmainbuffer2, (void*)MSCRC_MAIN_START2, MSCRC_MAIN_RANGE2);
 	memcpy(crcbuffer, (void*)MSCRC_START, MSCRC_RANGE);
@@ -126,15 +126,9 @@ void bypass()
 	cout << "Redirect MSCRCMAIN\t\t" << MSCRCMainHook << endl;
 	cout << "Redirect MSCRC1\t\t\t" << MSCRC1Hook << endl;
 	cout << "Redirect MSCRC2\t\t\t" << MSCRC2Hook << endl;
-	*(DWORD*)GAME_WIDTH = GetPrivateProfileInt("Resolution", "Width", 1024, CONFIG_PATH);
-	*(DWORD*)GAME_HEIGHT = GetPrivateProfileInt("Resolution", "Height", 768, CONFIG_PATH);
 }
 
-void bypass_file_check()
-{
-	//TODO
-	//*(BYTE*)0x7B2318 = JMP;
-	//*(DWORD*)(0x7B2318 + 1) = jmp(0x7B2318, 0x7B2320);//0x7B2598; //Skip file check to load dinput8.dll
-	//for (int i = 0; i < 6; i++)
-	//	*(BYTE*)(0x007B25DD + i) = NOP;
+void memedit() {
+	*(DWORD*)GAME_WIDTH = GetPrivateProfileInt("Resolution", "Width", 1024, CONFIG_PATH);
+	*(DWORD*)GAME_HEIGHT = GetPrivateProfileInt("Resolution", "Height", 768, CONFIG_PATH);
 }
