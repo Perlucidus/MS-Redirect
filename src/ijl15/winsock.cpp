@@ -1,4 +1,7 @@
 #include "stdafx.h"
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include "winsock.h"
 #include "detours_util.h"
 #include "settings.h"
@@ -21,14 +24,8 @@ int WINAPI GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpE
 	WSAAddressToStringA((sockaddr*)name, *namelen, NULL, szAddr, &dwLen);
 	sockaddr_in* service = (sockaddr_in*)name;
 	u_short nPort = ntohs(service->sin_port);
-	if (strstr(szAddr, HOST_IP))
-	{
-		const char* NEXON_IP = rand() % 2 ? NEXON_IP1 : NEXON_IP2;
-		service->sin_addr.S_un.S_addr = inet_addr(NEXON_IP);
-		cout << "WSPGetPeerName redirected to " << NEXON_IP << ":" << nPort << endl;
-	}
-	else
-		cout << "WSPGetPeerName from " << szAddr << ":" << nPort << endl;
+	service->sin_addr.S_un.S_addr = inet_addr(NEXON_IP1);
+	cout << "WSPGetPeerName from " << szAddr << " redirected to " << NEXON_IP1 << ":" << nPort << endl;
 	return nRet;
 }
 
@@ -39,13 +36,8 @@ int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF 
 	WSAAddressToStringA((sockaddr*)name, namelen, NULL, szAddr, &dwLen);
 	sockaddr_in* service = (sockaddr_in*)name;
 	u_short nPort = ntohs(service->sin_port);
-	if (strstr(szAddr, SEARCH_IP)) // Contains SEARCH_IP
-	{
-		service->sin_addr.S_un.S_addr = inet_addr(HOST_IP);
-		cout << "WSPConnect redirected to " << HOST_IP << ":" << nPort << endl;
-	}
-	else
-		cout << "WSPConnect from " << szAddr << ":" << nPort;
+	service->sin_addr.S_un.S_addr = inet_addr(HOST_IP);
+	cout << "WSPConnect from " << szAddr << " redirected to " << HOST_IP << ":" << nPort << endl;
 	return WSPProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 

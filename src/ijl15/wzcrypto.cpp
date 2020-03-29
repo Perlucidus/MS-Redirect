@@ -14,7 +14,7 @@ void detourWzRSAEncryptString()
 	WzRSAEncryptString Hook = [](char* key, const char* rn, char* text, char* result) -> int
 	{
 		memset(result, 0, 300);
-		strcpy(result, text); // Copy without encryption
+		memcpy(result, text, 300); // Copy without encryption
 		cout << "WzRSAEncryptString " << text << endl;
 		return 0;
 	};

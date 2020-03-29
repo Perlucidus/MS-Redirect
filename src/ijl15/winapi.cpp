@@ -54,13 +54,9 @@ void detourCreateWindowEx()
 		) -> HWND
 	{
 		auto lpLocalWndName = lpWindowName;
+		cout << "CreateWindowEx " << lpClassName << endl;
 		if (!strcmp(lpClassName, "StartUpDlgClass"))
 		{
-			WSADATA wsaData;
-			int err;
-			if (err = WSAStartup(MAKEWORD(2, 2), &wsaData))
-				cout << "WSAStartup failed with error " << err << endl;
-			bypass();
 			cout << "CreateWindowEx StartUpDlgClass" << endl;
 			return NULL; // Skip startup
 		}
@@ -70,6 +66,7 @@ void detourCreateWindowEx()
 		}
 		else if (!strcmp(lpClassName, "MapleStoryClass"))
 		{
+			bypass();
 			lpLocalWndName = WINDOW_NAME; // Set window name
 			cout << "CreateWindowEx with param " << lpParam << endl;
 		}

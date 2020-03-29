@@ -6,6 +6,7 @@
 #include "winapi.h"
 #include "hshield.h"
 #include "wzcrypto.h"
+#include "memory.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -23,7 +24,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-		DisableThreadLibraryCalls(hModule);
+		//DisableThreadLibraryCalls(hModule);
 		Initialize();
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
@@ -34,6 +35,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 }
 
 void Initialize() {
+#if _DEBUG
 	// Start debugging console
 	AllocConsole();
 	DWORD pid = GetCurrentProcessId();
@@ -42,8 +44,8 @@ void Initialize() {
 	ostringstream ss;
 	ss << "PID: " << pid;
 	SetConsoleTitleA(ss.str().c_str());
+#endif
 	try {
-		srand(pid);
 		redirect_ijl_calls(); // Redirect ijl15 calls to original library
 		detourWSPStartup(); // Detour Connect/GetPeerName
 		detourLoadLibrary(); // Detour LoadLibrary
@@ -52,6 +54,7 @@ void Initialize() {
 			detourCreateMutex(); // Detour CreateMutex
 		//hook_hshield(); // HShield emulator (not completed)
 		detourWzRSAEncryptString(); // Detour WzRSAEncryptString
+		bypass_file_check();
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;
