@@ -48,9 +48,6 @@
     <ClInclude Include="wzcrypto.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ijl15_raw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MemoryModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>

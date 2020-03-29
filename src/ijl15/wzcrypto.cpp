@@ -6,9 +6,9 @@
 
 using namespace std;
 
-void detourWzRSAEncryptString()
+void wz::DetourWzRSAEncryptString()
 {
-	HMODULE hModule = LoadLibraryS("WZCrypto.dll");
+	HMODULE hModule = detours::LoadLibraryS("WZCrypto.dll");
 	typedef int(__cdecl* WzRSAEncryptString)(char*, const char*, char*, char*);
 	static auto _WzRSAEncryptString = (WzRSAEncryptString)(GetProcAddress(hModule, "WzRSAEncryptString"));
 	WzRSAEncryptString Hook = [](char* key, const char* rn, char* text, char* result) -> int
@@ -20,7 +20,7 @@ void detourWzRSAEncryptString()
 	};
 	cout << "Redirect WzRSAEncryptString\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_WzRSAEncryptString), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_WzRSAEncryptString), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour WzRSAEncryptString" << endl;

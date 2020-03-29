@@ -9,4 +9,6 @@ extern "C" {
 	__declspec(dllexport) void ijlErrorStr();
 }
 
-void redirect_ijl_calls();
+namespace ijl15 {
+	void HijackAPICalls();
+}

@@ -6,6 +6,8 @@
 #include <WS2spi.h>
 #include <string>
 
-int WINAPI GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno);
-int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno);
-void detourWSPStartup();
+namespace net {
+	int WINAPI GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno);
+	int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno);
+	void DetourWSPStartup();
+}

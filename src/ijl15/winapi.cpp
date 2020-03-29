@@ -9,9 +9,9 @@
 
 using namespace std;
 
-void detourCreateWindowEx()
+void winapi::DetourCreateWindowEx()
 {
-	HMODULE hModule = LoadLibraryS("USER32");
+	HMODULE hModule = detours::LoadLibraryS("USER32");
 	static auto _CreateWindowExA = decltype(&CreateWindowExA)(GetProcAddress(hModule, "CreateWindowExA"));
 	decltype(&CreateWindowExA) Hook = [](
 		DWORD dwExStyle,
@@ -41,8 +41,8 @@ void detourCreateWindowEx()
 		}
 		else if (!strcmp(lpClassName, "MapleStoryClass"))
 		{
-			bypass();
-			memedit();
+			memory::crc::BypassMSCRC();
+			memory::hack::Hack();
 			lpLocalWndName = WINDOW_NAME; // Set window name
 			cout << "CreateWindowEx with param " << lpParam << endl;
 		}
@@ -51,7 +51,7 @@ void detourCreateWindowEx()
 	};
 	cout << "Redirect CreateWindowExA\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_CreateWindowExA), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_CreateWindowExA), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour CreateWindowExA" << endl;
@@ -59,19 +59,19 @@ void detourCreateWindowEx()
 	}
 }
 
-void detourFindFirstFile()
+void winapi::DetourFindFirstFile()
 {
-	HMODULE hModule = LoadLibraryS("KERNEL32");
+	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
 	static auto _FindFirstFileA = decltype(&FindFirstFileA)(GetProcAddress(hModule, "FindFirstFileA"));
 	decltype(&FindFirstFileA) Hook = [](LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) -> HANDLE
 	{
 		if (lpFileName && !strcmp(lpFileName, "*"))
-			return INVALID_FILE_HANDLE;
+			return winapi::INVALID_FILE_HANDLE;
 		return _FindFirstFileA(lpFileName, lpFindFileData);
 	};
 	cout << "Redirect FindFirstFileA\t\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_FindFirstFileA), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_FindFirstFileA), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour FindFirstFileA" << endl;
@@ -79,9 +79,9 @@ void detourFindFirstFile()
 	}
 }
 
-void detourGetModuleFileName()
+void winapi::DetourGetModuleFileName()
 {
-	HMODULE hModule = LoadLibraryS("KERNEL32");
+	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
 	static auto _GetModuleFileNameA = decltype(&GetModuleFileNameA)(GetProcAddress(hModule, "GetModuleFileNameA"));
 	decltype(&GetModuleFileNameA) Hook = [](HMODULE hModule, LPSTR lpFilename, DWORD nSize) -> DWORD
 	{
@@ -94,7 +94,7 @@ void detourGetModuleFileName()
 	};
 	cout << "Redirect GetModuleFileNameA\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_GetModuleFileNameA), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_GetModuleFileNameA), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour GetModuleFileNameA" << endl;
@@ -102,9 +102,9 @@ void detourGetModuleFileName()
 	}
 }
 
-void detourCreateMutex()
+void winapi::DetourCreateMutex()
 {
-	HMODULE hModule = LoadLibraryS("KERNEL32");
+	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
 	static auto _CreateMutexA = decltype(&CreateMutexA)(GetProcAddress(hModule, "CreateMutexA"));
 	decltype(&CreateMutexA) Hook = [](
 		LPSECURITY_ATTRIBUTES lpMutexAttributes,
@@ -121,7 +121,7 @@ void detourCreateMutex()
 	};
 	cout << "Redirect CreateMutexA\t\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_CreateMutexA), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_CreateMutexA), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour CreateMutexA" << endl;

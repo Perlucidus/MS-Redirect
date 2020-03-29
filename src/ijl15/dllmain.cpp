@@ -14,7 +14,7 @@
 
 using namespace std;
 
-void Initialize();
+void Attach();
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -24,37 +24,39 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-		//DisableThreadLibraryCalls(hModule);
-		Initialize();
+		Attach();
+		DisableThreadLibraryCalls(hModule);
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
+		break;
     case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;
 }
 
-void Initialize() {
+void Attach() {
 #if _DEBUG
 	// Start debugging console
 	AllocConsole();
 	DWORD pid = GetCurrentProcessId();
 	AttachConsole(pid);
-	freopen("CON", "w", stdout);
+	FILE* f = nullptr;
+	freopen_s(&f, "CON", "w", stdout);
 	ostringstream ss;
 	ss << "PID: " << pid;
 	SetConsoleTitleA(ss.str().c_str());
 #endif
 	try {
-		redirect_ijl_calls(); // Redirect ijl15 calls to original library
-		detourWSPStartup(); // Detour Connect/GetPeerName
-		detourCreateWindowEx(); // Detour CreateWindowEx
-		//detourFindFirstFile(); // Detour FindFirstFile
-		detourGetModuleFileName(); // Detour GetModileFileName
-		if (DISABLE_MUTEX)
-			detourCreateMutex(); // Detour CreateMutex
-		//hook_hshield(); // HShield emulator (not completed)
-		detourWzRSAEncryptString(); // Detour WzRSAEncryptString
+		ijl15::HijackAPICalls(); // Redirect ijl15 calls to original library
+		net::DetourWSPStartup();
+		winapi::DetourCreateWindowEx();
+		//window::DetourFindFirstFile();
+		winapi::DetourGetModuleFileName();
+		if (winapi::DISABLE_MUTEX)
+			winapi::DetourCreateMutex();
+		hshield::BypassHShield();
+		wz::DetourWzRSAEncryptString();
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;

@@ -1,3 +1,5 @@
 #pragma once
 
-void detourWzRSAEncryptString();
+namespace wz {
+	void DetourWzRSAEncryptString();
+}

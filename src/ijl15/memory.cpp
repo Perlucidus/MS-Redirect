@@ -11,14 +11,15 @@ using namespace std;
 constexpr BYTE JMP = 0xE9;
 constexpr BYTE NOP = 0x90;
 
+constexpr DWORD MSCRC_START = memory::crc::MSCRC_START;
 DWORD MSCRC_END;
-constexpr DWORD MSCRC_MAIN_START1 = (MSCRC1 / 0x1000) * 0x1000;
-constexpr DWORD MSCRC_MAIN_END1 = (MSCRC1 / 0x1000 + 1) * 0x1000;
-constexpr DWORD MSCRC_MAIN_START2 = (MSCRC2 / 0x1000) * 0x1000;
-constexpr DWORD MSCRC_MAIN_END2 = (MSCRC2 / 0x1000 + 1) * 0x1000;
-constexpr DWORD MSCRCMainRet = MSCRC_MAIN + 5;
-constexpr DWORD MSCRC1Ret = MSCRC1 + 5;
-constexpr DWORD MSCRC2Ret = MSCRC2 + 5;
+constexpr DWORD MSCRC_MAIN_START1 = (memory::crc::MSCRC1 / 0x1000) * 0x1000;
+constexpr DWORD MSCRC_MAIN_END1 = (memory::crc::MSCRC1 / 0x1000 + 1) * 0x1000;
+constexpr DWORD MSCRC_MAIN_START2 = (memory::crc::MSCRC2 / 0x1000) * 0x1000;
+constexpr DWORD MSCRC_MAIN_END2 = (memory::crc::MSCRC2 / 0x1000 + 1) * 0x1000;
+constexpr DWORD MSCRCMainRet = memory::crc::MSCRC_MAIN + 5;
+constexpr DWORD MSCRC1Ret = memory::crc::MSCRC1 + 5;
+constexpr DWORD MSCRC2Ret = memory::crc::MSCRC2 + 5;
 constexpr DWORD loc_1053E59 = 0x01053E59;
 
 void* crcmainbuffer1;
@@ -88,7 +89,16 @@ void __declspec(naked) MSCRC2Hook()
 	}
 }
 
-void bypass()
+void memory::SetJMP(void* pos, void* target, int padding)
+{
+	DWORD blockSize = sizeof(BYTE) + sizeof(DWORD);
+	*(BYTE*)pos = JMP;
+	*(DWORD*)((DWORD)pos + sizeof(BYTE)) = (DWORD)target - ((DWORD)pos + blockSize);
+	for (int i = 0; i < padding; i++)
+		*(BYTE*)((DWORD)pos + blockSize + i) = NOP;
+}
+
+void memory::crc::BypassMSCRC()
 {
 	cout << "MSCRC Bypass" << endl;
 	//Find end for MSCRC
@@ -115,20 +125,15 @@ void bypass()
 	cout << "Redirect MSCRC_MAIN CRC2 Region\t" << crcmainbuffer2 << endl;
 	cout << "Redirect MSCRC1 Region\t\t" << crcbuffer << endl;
 	cout << "Redirect MSCRC2 Region\t\t" << crcbuffer << endl;
-	*(BYTE*)MSCRC_MAIN = JMP;
-	*(DWORD*)(MSCRC_MAIN + 1) = jmp(MSCRC_MAIN, MSCRCMainHook);
-	*(BYTE*)(MSCRC_MAIN + 5) = NOP;
-	*(BYTE*)(MSCRC_MAIN + 6) = NOP;
-	*(BYTE*)MSCRC1 = JMP;
-	*(DWORD*)(MSCRC1 + 1) = jmp(MSCRC1, (int)MSCRC1Hook);
-	*(BYTE*)MSCRC2 = JMP;
-	*(DWORD*)(MSCRC2 + 1) = jmp(MSCRC2, (int)MSCRC2Hook);
+	SetJMP((void*)MSCRC_MAIN, MSCRCMainHook, 2);
+	SetJMP((void*)MSCRC1, MSCRC1Hook);
+	SetJMP((void*)MSCRC2, MSCRC2Hook);
 	cout << "Redirect MSCRCMAIN\t\t" << MSCRCMainHook << endl;
 	cout << "Redirect MSCRC1\t\t\t" << MSCRC1Hook << endl;
 	cout << "Redirect MSCRC2\t\t\t" << MSCRC2Hook << endl;
 }
 
-void memedit() {
-	*(DWORD*)GAME_WIDTH = GetPrivateProfileInt("Resolution", "Width", 1024, CONFIG_PATH);
-	*(DWORD*)GAME_HEIGHT = GetPrivateProfileInt("Resolution", "Height", 768, CONFIG_PATH);
+void memory::hack::Hack() {
+	*(DWORD*)GAME_WIDTH = GetPrivateProfileInt("Resolution", "Width", 1024, config::CONFIG_PATH);
+	*(DWORD*)GAME_HEIGHT = GetPrivateProfileInt("Resolution", "Height", 768, config::CONFIG_PATH);
 }

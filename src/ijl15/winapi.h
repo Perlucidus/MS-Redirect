@@ -1,6 +1,8 @@
 #pragma once
 
-void detourCreateWindowEx();
-void detourFindFirstFile();
-void detourGetModuleFileName();
-void detourCreateMutex();
+namespace winapi {
+	void DetourCreateWindowEx();
+	void DetourFindFirstFile();
+	void DetourGetModuleFileName();
+	void DetourCreateMutex();
+}

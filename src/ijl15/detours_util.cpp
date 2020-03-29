@@ -8,7 +8,7 @@
 
 using namespace std;
 
-BOOL Detour(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
+BOOL detours::Detour(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
 {
 	if (DetourTransactionBegin() != NO_ERROR)
 		return FALSE;
@@ -24,7 +24,7 @@ BOOL Detour(BOOL bInstall, PVOID* ppvTarget, PVOID pvDetour)
 	return FALSE;
 }
 
-VOID Detour(PVOID* ppvTarget, PVOID pvDetour)
+VOID detours::Detour(PVOID* ppvTarget, PVOID pvDetour)
 {
 	if (!Detour(true, ppvTarget, pvDetour)) {
 		ostringstream oss;
@@ -33,7 +33,7 @@ VOID Detour(PVOID* ppvTarget, PVOID pvDetour)
 	}
 }
 
-HMODULE LoadLibraryS(LPCSTR lpLibFileName)
+HMODULE detours::LoadLibraryS(LPCSTR lpLibFileName)
 {
 	HMODULE hModule = LoadLibrary(lpLibFileName);
 	if (!hModule) {

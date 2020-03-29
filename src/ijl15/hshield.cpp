@@ -15,7 +15,7 @@ bool heartbeat = false;
 bool service = false;
 AhnHS_Callback _AhnHS_Callback = 0;
 
-int __stdcall AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error)
+int __stdcall hshield::AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error)
 {
 		*error = HS_ERR_OK;
 		switch (code) {
@@ -66,7 +66,7 @@ int __stdcall AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsig
 		return 1;
 }
 
-int __stdcall _AhnHS_CallbackProc()
+int __stdcall hshield::_AhnHS_CallbackProc()
 {
 	if (_AhnHS_Callback)
 	{
@@ -86,10 +86,22 @@ int __stdcall _AhnHS_CallbackProc()
 	return 0;
 }
 
+void hshield::DetourAhnHS_ServiceDispatch() {
+	HMODULE hModule = detours::LoadLibraryS("HShield/ehsvc.dll");
+	static auto _AhnHS_ServiceDispatch = (AhnHS_ServiceDispatch)(GetProcAddress(hModule, (LPCSTR)10));
+	cout << "Redirect AhnHS_ServiceDispatch\t" << AhnHS_ServiceDispatch_Hook << endl;
+	try {
+		detours::Detour(reinterpret_cast<void**>(&_AhnHS_ServiceDispatch), AhnHS_ServiceDispatch_Hook);
+	}
+	catch (runtime_error e) {
+		cout << "Failed to detour AhnHS_ServiceDispatch" << endl;
+		throw;
+	}
+}
 
-void detourCreateProcess()
+void hshield::DetourCreateProcess()
 {
-	HMODULE hModule = LoadLibraryS("KERNEL32");
+	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
 	static auto _CreateProcessA = decltype(&CreateProcessA)(GetProcAddress(hModule, "CreateProcessA"));
 	decltype(&CreateProcessA) Hook = [](
 		LPCSTR lpApplicationName,
@@ -134,9 +146,9 @@ void detourCreateProcess()
 			lpProcessInformation
 		);
 	};
-	cout << "Redirect CreateProcessA\t" << Hook << endl;
+	cout << "Redirect CreateProcessA\t\t" << Hook << endl;
 	try {
-		Detour(reinterpret_cast<void**>(&_CreateProcessA), Hook);
+		detours::Detour(reinterpret_cast<void**>(&_CreateProcessA), Hook);
 	}
 	catch (runtime_error e) {
 		cout << "Failed to detour CreateProcessA" << endl;
@@ -144,21 +156,7 @@ void detourCreateProcess()
 	}
 }
 
-void detourAhnHS_ServiceDispatch() {
-	HMODULE hModule = LoadLibraryS("HShield/ehsvc.dll");
-	static auto _AhnHS_ServiceDispatch = (AhnHS_ServiceDispatch)(GetProcAddress(hModule, (LPCSTR)10));
-	cout << "Redirect AhnHS_ServiceDispatch\t" << AhnHS_ServiceDispatch_Hook << endl;
-	try {
-		Detour(reinterpret_cast<void**>(&_AhnHS_ServiceDispatch), AhnHS_ServiceDispatch_Hook);
-	}
-	catch (runtime_error e) {
-		cout << "Failed to detour AhnHS_ServiceDispatch" << endl;
-		throw;
-	}
-}
-
-void hshield_bypass()
+void hshield::BypassHShield()
 {
-	detourCreateProcess();
-	detourAhnHS_ServiceDispatch();
+	DetourCreateProcess();
 }

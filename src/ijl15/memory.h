@@ -1,5 +1,13 @@
 #pragma once
 
-void bypass();
-void memedit();
-void bypass_file_check();
+namespace memory {
+	namespace crc {
+		void BypassMSCRC();
+	}
+
+	namespace hack {
+		void Hack();
+	}
+
+	void SetJMP(void* pos, void* target, int padding = 0);
+}
