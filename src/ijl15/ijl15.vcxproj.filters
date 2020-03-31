@@ -80,7 +80,7 @@
     <ClCompile Include="wzcrypto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MemoryModule.cpp">
+    <ClCompile Include="MemoryModule.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

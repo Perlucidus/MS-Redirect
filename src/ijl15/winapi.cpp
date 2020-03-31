@@ -3,7 +3,8 @@
 #include "detours_util.h"
 #include "settings.h"
 #include "memory.h"
-#include <Windows.h>
+#include <thread>
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 
