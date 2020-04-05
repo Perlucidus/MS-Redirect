@@ -51,8 +51,8 @@ void Attach() {
 		ijl15::HijackAPICalls(); // Redirect ijl15 calls to original library
 		net::DetourWSPStartup();
 		winapi::DetourCreateWindowEx();
-		//window::DetourFindFirstFile();
-		winapi::DetourGetModuleFileName();
+		winapi::DetourFindFirstFile();
+		//winapi::DetourGetModuleFileName();
 		if (winapi::DISABLE_MUTEX)
 			winapi::DetourCreateMutex();
 		hshield::BypassHShield();

@@ -66,8 +66,9 @@ void winapi::DetourFindFirstFile()
 	static auto _FindFirstFileA = decltype(&FindFirstFileA)(GetProcAddress(hModule, "FindFirstFileA"));
 	decltype(&FindFirstFileA) Hook = [](LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) -> HANDLE
 	{
+		cout << "FindFirstFile " << lpFileName << endl;
 		if (lpFileName && !strcmp(lpFileName, "*"))
-			return winapi::INVALID_FILE_HANDLE;
+			return _FindFirstFileA("ZLZ.dll", lpFindFileData);
 		return _FindFirstFileA(lpFileName, lpFindFileData);
 	};
 	cout << "Redirect FindFirstFileA\t\t" << Hook << endl;
@@ -86,10 +87,17 @@ void winapi::DetourGetModuleFileName()
 	static auto _GetModuleFileNameA = decltype(&GetModuleFileNameA)(GetProcAddress(hModule, "GetModuleFileNameA"));
 	decltype(&GetModuleFileNameA) Hook = [](HMODULE hModule, LPSTR lpFilename, DWORD nSize) -> DWORD
 	{
+		this_thread::sleep_for(chrono::milliseconds(300));
 		DWORD result = _GetModuleFileNameA(hModule, lpFilename, nSize);
 		if (!result) {
-			cout << "GetModuleFileNameA failed for " << lpFilename << endl;
-			result = _GetModuleFileNameA(NULL, lpFilename, nSize);
+			for (int i = 0; i < GETMODULEFILENAME_RETRY_MAX; i++) {
+				cout << "GetModuleFileNameA failed (" << i + 1 << "/"
+					<< GETMODULEFILENAME_RETRY_MAX << ")" << endl;
+				this_thread::sleep_for(chrono::milliseconds(GETMODULEFILENAME_RETRY_SLEEP));
+				result = _GetModuleFileNameA(hModule, lpFilename, nSize);
+				if (!result)
+					result = _GetModuleFileNameA(NULL, lpFilename, nSize);
+			}
 		}
 		return result;
 	};
