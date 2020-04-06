@@ -1,5 +1,7 @@
 #pragma once
 
 namespace wz {
-	void DetourWzRSAEncryptString();
+	int WzRSAEncryptStringHook(char*, const char*, char*, char*);
+
+	void Init();
 }

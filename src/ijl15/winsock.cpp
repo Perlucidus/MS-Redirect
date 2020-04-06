@@ -5,14 +5,14 @@
 #include "winsock.h"
 #include "detours_util.h"
 #include "settings.h"
-#include <iostream>
 #include <stdexcept>
+#include <iostream>
 
 using namespace std;
 
 WSPPROC_TABLE WSPProcTable;
 
-int WINAPI net::GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno)
+int WSPAPI net::GetPeerNameHook(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno)
 {
 	int nRet = WSPProcTable.lpWSPGetPeerName(s, name, namelen, lpErrno);
 	if (nRet == SOCKET_ERROR) {
@@ -29,7 +29,7 @@ int WINAPI net::GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPIN
 	return nRet;
 }
 
-int WINAPI net::Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno)
+int WSPAPI net::WSPConnectHook(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno)
 {
 	char szAddr[50];
 	DWORD dwLen = 50;
@@ -41,27 +41,21 @@ int WINAPI net::Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWS
 	return WSPProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
-void net::DetourWSPStartup()
+int WSPAPI net::WSPStartupHook(WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable)
 {
-	HMODULE hModule = detours::LoadLibraryS("MSWSOCK");
-	static auto _WSPStartup = decltype(&WSPStartup)(GetProcAddress(hModule, "WSPStartup"));
-	decltype(&WSPStartup) Hook = [](WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable) -> int
-	{
-		int ret = _WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
-		WSPProcTable = *lpProcTable;
-		lpProcTable->lpWSPConnect = Connect; // Redirect Connection
-		lpProcTable->lpWSPGetPeerName = GetPeerName; // Redirect GetPeerName
-		cout << "WSPProcTable@" << lpProcTable << endl;
-		cout << "Redirect WSPConnect\t\t" << Connect << endl;
-		cout << "Redirect WSPGetPeerName\t\t" << GetPeerName << endl;
-		return ret;
-	};
-	cout << "Redirect WSPStartup\t\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_WSPStartup), Hook);
-	}
-	catch (runtime_error e) {
-		cout << "Failed to detour WSPStartup" << endl;
-		throw;
-	}
+	PVOID proc = detours::HookMap["MSWSOCK::WSPStartup"];
+	auto _WSPStartup = decltype(&WSPStartup)(proc);
+	int result = _WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
+	WSPProcTable = *lpProcTable;
+	lpProcTable->lpWSPConnect = WSPConnectHook; //Redirect Connection
+	lpProcTable->lpWSPGetPeerName = GetPeerNameHook; //Redirect GetPeerName
+	cout << "WSPProcTable@" << lpProcTable << endl;
+	cout << "Redirect WSPConnect\t\t" << WSPConnectHook << endl;
+	cout << "Redirect WSPGetPeerName\t\t" << GetPeerNameHook << endl;
+	return result;
+};
+
+void net::Init()
+{
+	detours::Detour("MSWSOCK", "WSPStartup", WSPStartupHook);
 }

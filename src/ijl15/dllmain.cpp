@@ -6,7 +6,7 @@
 #include "winapi.h"
 #include "hshield.h"
 #include "wzcrypto.h"
-#include "memory.h"
+#include "dinput8.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -49,16 +49,16 @@ void Attach() {
 #endif
 	try {
 		ijl15::HijackAPICalls(); // Redirect ijl15 calls to original library
-		net::DetourWSPStartup();
-		winapi::DetourCreateWindowEx();
-		winapi::DetourFindFirstFile();
-		//winapi::DetourGetModuleFileName();
-		if (winapi::DISABLE_MUTEX)
-			winapi::DetourCreateMutex();
 		hshield::BypassHShield();
-		wz::DetourWzRSAEncryptString();
+		net::Init();
+		wz::Init();
+		dinput8::Init();
+		winapi::Init();
 	}
 	catch (exception const& e) {
 		cout << e.what() << endl;
+	}
+	catch (...) {
+		cout << "FATAL ERROR" << endl;
 	}
 }

@@ -7,7 +7,8 @@
 #include <string>
 
 namespace net {
-	int WINAPI GetPeerName(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno);
-	int WINAPI Connect(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno);
-	void DetourWSPStartup();
+	int WSPAPI GetPeerNameHook(SOCKET, struct sockaddr*, LPINT, LPINT);
+	int WSPAPI WSPConnectHook(SOCKET, const struct sockaddr*, int, LPWSABUF, LPWSABUF, LPQOS, LPQOS, LPINT);
+	int WSPAPI WSPStartupHook(WORD, LPWSPDATA, LPWSAPROTOCOL_INFOW, WSPUPCALLTABLE, LPWSPPROC_TABLE);
+	void Init();
 }

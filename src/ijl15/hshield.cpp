@@ -15,7 +15,7 @@ bool heartbeat = false;
 bool service = false;
 AhnHS_Callback _AhnHS_Callback = 0;
 
-int __stdcall hshield::AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error)
+int __stdcall hshield::AhnHS_ServiceDispatchHook(unsigned int code, void** params, unsigned int* error)
 {
 		*error = HS_ERR_OK;
 		switch (code) {
@@ -86,77 +86,36 @@ int __stdcall hshield::_AhnHS_CallbackProc()
 	return 0;
 }
 
-void hshield::DetourAhnHS_ServiceDispatch() {
-	HMODULE hModule = detours::LoadLibraryS("HShield/ehsvc.dll");
-	static auto _AhnHS_ServiceDispatch = (AhnHS_ServiceDispatch)(GetProcAddress(hModule, (LPCSTR)10));
-	cout << "Redirect AhnHS_ServiceDispatch\t" << AhnHS_ServiceDispatch_Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_AhnHS_ServiceDispatch), AhnHS_ServiceDispatch_Hook);
-	}
-	catch (runtime_error e) {
-		cout << "Failed to detour AhnHS_ServiceDispatch" << endl;
-		throw;
-	}
-}
-
-void hshield::DetourCreateProcess()
+BOOL WINAPI hshield::CreateProcessHook(LPCTSTR lpApplicationName, LPTSTR lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCTSTR lpCurrentDirectory,
+	LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
 {
-	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
-	static auto _CreateProcessA = decltype(&CreateProcessA)(GetProcAddress(hModule, "CreateProcessA"));
-	decltype(&CreateProcessA) Hook = [](
-		LPCSTR lpApplicationName,
-		LPSTR lpCommandLine,
-		LPSECURITY_ATTRIBUTES lpProcessAttributes,
-		LPSECURITY_ATTRIBUTES lpThreadAttributes,
-		BOOL bInheritHandles,
-		DWORD dwCreationFlags,
-		LPVOID lpEnvironment,
-		LPCSTR lpCurrentDirectory,
-		LPSTARTUPINFOA lpStartupInfo,
-		LPPROCESS_INFORMATION lpProcessInformation
-		) -> BOOL
-	{
-		if (lpCommandLine) {
-			bool hsupdate = strstr(lpCommandLine, "HSUpdate.exe");
-			bool autoup = strstr(lpCommandLine, "autoup.exe");
-			if (hsupdate || autoup) {
-				if (hsupdate) {
-					HANDLE hEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE,
-						"Global\\EF81BA4B-4163-44f5-90E2-F05C1E49C12D");
-					SetEvent(hEvent);
-					CloseHandle(hEvent);
-				}
-				char lpszFilePath[256];
-				StringCchCopy(lpszFilePath + GetSystemDirectory(lpszFilePath, 256), 256, "\\svchost.exe");
-				return _CreateProcessA(lpszFilePath, const_cast<char*>("svchost.exe"),
-					NULL, NULL, FALSE, dwCreationFlags, NULL, NULL, lpStartupInfo, lpProcessInformation);
+	auto _CreateProcess = decltype(&CreateProcess)(detours::HookMap["KERNEL32::CreateProcess"]);
+	if (lpCommandLine) {
+		bool hsupdate = strstr(lpCommandLine, "HSUpdate.exe");
+		bool autoup = strstr(lpCommandLine, "autoup.exe");
+		if (hsupdate || autoup) {
+			if (hsupdate) {
+				HANDLE hEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE,
+					"Global\\EF81BA4B-4163-44f5-90E2-F05C1E49C12D");
+				SetEvent(hEvent);
+				CloseHandle(hEvent);
 			}
+			char lpszFilePath[256];
+			StringCchCopy(lpszFilePath + GetSystemDirectory(lpszFilePath, 256), 256, "\\svchost.exe");
+			return _CreateProcess(lpszFilePath, const_cast<char*>("svchost.exe"),
+				NULL, NULL, FALSE, dwCreationFlags, NULL, NULL, lpStartupInfo, lpProcessInformation);
 		}
-		cout << "CreateProcess " << lpCommandLine << endl;
-		return _CreateProcessA(
-			lpApplicationName,
-			lpCommandLine,
-			lpProcessAttributes,
-			lpThreadAttributes,
-			bInheritHandles,
-			dwCreationFlags,
-			lpEnvironment,
-			lpCurrentDirectory,
-			lpStartupInfo,
-			lpProcessInformation
-		);
-	};
-	cout << "Redirect CreateProcessA\t\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_CreateProcessA), Hook);
 	}
-	catch (runtime_error e) {
-		cout << "Failed to detour CreateProcessA" << endl;
-		throw;
-	}
+	cout << "CreateProcess " << lpCommandLine << endl;
+	return _CreateProcess(lpApplicationName, lpCommandLine, lpProcessAttributes,
+		lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment,
+		lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 }
 
 void hshield::BypassHShield()
 {
-	DetourCreateProcess();
+	detours::Detour(CreateProcess, CreateProcessHook, "KERNEL32::CreateProcess");
+	//detours::Detour("HShield/ehsvc.dll", reinterpret_cast<LPCTSTR>(10), AhnHS_ServiceDispatchHook);
 }

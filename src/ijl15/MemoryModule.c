@@ -63,7 +63,7 @@
 #include "MemoryModule.h"
 
 struct ExportNameEntry {
-	LPCSTR name;
+	LPCTSTR name;
 	WORD idx;
 };
 
@@ -454,7 +454,7 @@ BuildImportTable(PMEMORYMODULE module)
 		uintptr_t *thunkRef;
 		FARPROC *funcRef;
 		HCUSTOMMODULE *tmp;
-		HCUSTOMMODULE handle = module->loadLibrary((LPCSTR)(codeBase + importDesc->Name), module->userdata);
+		HCUSTOMMODULE handle = module->loadLibrary((LPCTSTR)(codeBase + importDesc->Name), module->userdata);
 		if (handle == NULL) {
 			SetLastError(ERROR_MOD_NOT_FOUND);
 			result = FALSE;
@@ -482,11 +482,11 @@ BuildImportTable(PMEMORYMODULE module)
 		}
 		for (; *thunkRef; thunkRef++, funcRef++) {
 			if (IMAGE_SNAP_BY_ORDINAL(*thunkRef)) {
-				*funcRef = module->getProcAddress(handle, (LPCSTR)IMAGE_ORDINAL(*thunkRef), module->userdata);
+				*funcRef = module->getProcAddress(handle, (LPCTSTR)IMAGE_ORDINAL(*thunkRef), module->userdata);
 			}
 			else {
 				PIMAGE_IMPORT_BY_NAME thunkData = (PIMAGE_IMPORT_BY_NAME)(codeBase + (*thunkRef));
-				*funcRef = module->getProcAddress(handle, (LPCSTR)&thunkData->Name, module->userdata);
+				*funcRef = module->getProcAddress(handle, (LPCTSTR)&thunkData->Name, module->userdata);
 			}
 			if (*funcRef == 0) {
 				result = FALSE;
@@ -516,7 +516,7 @@ BOOL MemoryDefaultFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType, void* 
 	return VirtualFree(lpAddress, dwSize, dwFreeType);
 }
 
-HCUSTOMMODULE MemoryDefaultLoadLibrary(LPCSTR filename, void *userdata)
+HCUSTOMMODULE MemoryDefaultLoadLibrary(LPCTSTR filename, void *userdata)
 {
 	HMODULE result;
 	UNREFERENCED_PARAMETER(userdata);
@@ -528,7 +528,7 @@ HCUSTOMMODULE MemoryDefaultLoadLibrary(LPCSTR filename, void *userdata)
 	return (HCUSTOMMODULE)result;
 }
 
-FARPROC MemoryDefaultGetProcAddress(HCUSTOMMODULE module, LPCSTR name, void *userdata)
+FARPROC MemoryDefaultGetProcAddress(HCUSTOMMODULE module, LPCTSTR name, void *userdata)
 {
 	UNREFERENCED_PARAMETER(userdata);
 	return (FARPROC)GetProcAddress((HMODULE)module, name);
@@ -779,12 +779,12 @@ static int _compare(const void *a, const void *b)
 
 static int _find(const void *a, const void *b)
 {
-	LPCSTR *name = (LPCSTR *)a;
+	LPCTSTR *name = (LPCTSTR *)a;
 	const struct ExportNameEntry *p = (const struct ExportNameEntry*) b;
 	return strcmp(*name, p->name);
 }
 
-FARPROC MemoryGetProcAddress(HMEMORYMODULE mod, LPCSTR name)
+FARPROC MemoryGetProcAddress(HMEMORYMODULE mod, LPCTSTR name)
 {
 	PMEMORYMODULE module = (PMEMORYMODULE)mod;
 	unsigned char *codeBase = module->codeBase;

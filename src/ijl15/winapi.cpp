@@ -2,138 +2,71 @@
 #include "winapi.h"
 #include "detours_util.h"
 #include "settings.h"
-#include "memory.h"
-#include <thread>
-#include <chrono>
+#include "game.h"
 #include <iostream>
 #include <stdexcept>
 
 using namespace std;
 
-void winapi::DetourCreateWindowEx()
+HWND WINAPI winapi::CreateWindowExHook(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle,
+	int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
-	HMODULE hModule = detours::LoadLibraryS("USER32");
-	static auto _CreateWindowExA = decltype(&CreateWindowExA)(GetProcAddress(hModule, "CreateWindowExA"));
-	decltype(&CreateWindowExA) Hook = [](
-		DWORD dwExStyle,
-		LPCTSTR lpClassName,
-		LPCTSTR lpWindowName,
-		DWORD dwStyle,
-		int x,
-		int y,
-		int nWidth,
-		int nHeight,
-		HWND hWndParent,
-		HMENU hMenu,
-		HINSTANCE hInstance,
-		LPVOID lpParam
-		) -> HWND
+	PVOID proc = detours::HookMap["USER32::CreateWindowEx"];
+	auto _CreateWindowEx = decltype(&CreateWindowEx)(proc);
+	auto lpLocalWndName = lpWindowName;
+	cout << "CreateWindowEx " << lpClassName << endl;
+	if (!strcmp(lpClassName, "StartUpDlgClass"))
 	{
-		auto lpLocalWndName = lpWindowName;
-		cout << "CreateWindowEx " << lpClassName << endl;
-		if (!strcmp(lpClassName, "StartUpDlgClass"))
-		{
-			cout << "CreateWindowEx StartUpDlgClass" << endl;
-			return NULL; // Skip startup
-		}
-		else if (!strcmp(lpClassName, "NexonADBallon")) {
-			cout << "NexonADBallon" << endl;
-			return NULL; // Skip ad
-		}
-		else if (!strcmp(lpClassName, "MapleStoryClass"))
-		{
-			memory::crc::BypassMSCRC();
-			memory::hack::Hack();
-			lpLocalWndName = WINDOW_NAME; // Set window name
-			cout << "CreateWindowEx with param " << lpParam << endl;
-		}
-		return _CreateWindowExA(dwExStyle, lpClassName, lpLocalWndName, dwStyle, x, y,
-			nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-	};
-	cout << "Redirect CreateWindowExA\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_CreateWindowExA), Hook);
+		cout << "CreateWindowEx StartUpDlgClass" << endl;
+		return NULL; // Skip startup
 	}
-	catch (runtime_error e) {
-		cout << "Failed to detour CreateWindowExA" << endl;
-		throw;
+	else if (!strcmp(lpClassName, "NexonADBallon")) {
+		cout << "NexonADBallon" << endl;
+		return NULL; // Skip ad
 	}
+	else if (!strcmp(lpClassName, "MapleStoryClass"))
+	{
+		game::Init();
+		lpLocalWndName = WINDOW_NAME; // Set window name
+		cout << "CreateWindowEx with param " << lpParam << endl;
+	}
+	return _CreateWindowEx(dwExStyle, lpClassName, lpLocalWndName, dwStyle, x, y,
+		nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 }
 
-void winapi::DetourFindFirstFile()
-{
-	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
-	static auto _FindFirstFileA = decltype(&FindFirstFileA)(GetProcAddress(hModule, "FindFirstFileA"));
-	decltype(&FindFirstFileA) Hook = [](LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) -> HANDLE
-	{
-		cout << "FindFirstFile " << lpFileName << endl;
-		if (lpFileName && !strcmp(lpFileName, "*"))
-			return _FindFirstFileA("ZLZ.dll", lpFindFileData);
-		return _FindFirstFileA(lpFileName, lpFindFileData);
-	};
-	cout << "Redirect FindFirstFileA\t\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_FindFirstFileA), Hook);
-	}
-	catch (runtime_error e) {
-		cout << "Failed to detour FindFirstFileA" << endl;
-		throw;
-	}
+HANDLE WINAPI winapi::FindFirstFileHook(LPCTSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
+	PVOID proc = detours::HookMap["KERNEL32::FindFirstFile"];
+	auto _FindFirstFile = decltype(&FindFirstFile)(proc);
+	if (lpFileName && !strcmp(lpFileName, "*"))
+		return INVALID_HANDLE_VALUE;
+	return _FindFirstFile(lpFileName, lpFindFileData);
 }
 
-void winapi::DetourGetModuleFileName()
-{
-	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
-	static auto _GetModuleFileNameA = decltype(&GetModuleFileNameA)(GetProcAddress(hModule, "GetModuleFileNameA"));
-	decltype(&GetModuleFileNameA) Hook = [](HMODULE hModule, LPSTR lpFilename, DWORD nSize) -> DWORD
-	{
-		this_thread::sleep_for(chrono::milliseconds(300));
-		DWORD result = _GetModuleFileNameA(hModule, lpFilename, nSize);
-		if (!result) {
-			for (int i = 0; i < GETMODULEFILENAME_RETRY_MAX; i++) {
-				cout << "GetModuleFileNameA failed (" << i + 1 << "/"
-					<< GETMODULEFILENAME_RETRY_MAX << ")" << endl;
-				this_thread::sleep_for(chrono::milliseconds(GETMODULEFILENAME_RETRY_SLEEP));
-				result = _GetModuleFileNameA(hModule, lpFilename, nSize);
-				if (!result)
-					result = _GetModuleFileNameA(NULL, lpFilename, nSize);
-			}
-		}
-		return result;
-	};
-	cout << "Redirect GetModuleFileNameA\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_GetModuleFileNameA), Hook);
-	}
-	catch (runtime_error e) {
-		cout << "Failed to detour GetModuleFileNameA" << endl;
-		throw;
-	}
+DWORD WINAPI winapi::GetModuleFileNameHook(HMODULE hModule, LPTSTR lpFilename, DWORD nSize) {
+	PVOID proc = detours::HookMap["KERNEL32::GetModuleFileName"];
+	auto _GetModuleFileName = decltype(&GetModuleFileName)(proc);
+	DWORD result = _GetModuleFileName(hModule, lpFilename, nSize);
+	if (!result)
+		result = _GetModuleFileName(NULL, lpFilename, nSize);
+	return result;
 }
 
-void winapi::DetourCreateMutex()
-{
-	HMODULE hModule = detours::LoadLibraryS("KERNEL32");
-	static auto _CreateMutexA = decltype(&CreateMutexA)(GetProcAddress(hModule, "CreateMutexA"));
-	decltype(&CreateMutexA) Hook = [](
-		LPSECURITY_ATTRIBUTES lpMutexAttributes,
-		BOOL bInitialOwner,
-		LPCSTR lpName
-		) -> HANDLE
+HANDLE WINAPI winapi::CreateMutexHook(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCTSTR lpName) {
+	PVOID proc = detours::HookMap["KERNEL32::CreateMutex"];
+	auto _CreateMutexA = decltype(&CreateMutex)(proc);
+	if (lpName && !strcmp(lpName, "WvsClientMtx"))
 	{
-		if (lpName && !strcmp(lpName, "WvsClientMtx"))
-		{
-			cout << "Faking handle for mutex " << lpName << endl;
-			return INVALID_MUTEX_HANDLE; //Any handle which is not the real one
-		}
-		return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
-	};
-	cout << "Redirect CreateMutexA\t\t" << Hook << endl;
-	try {
-		detours::Detour(reinterpret_cast<void**>(&_CreateMutexA), Hook);
+		cout << "Faking handle for mutex " << lpName << endl;
+		return (HANDLE)0x12345678;
 	}
-	catch (runtime_error e) {
-		cout << "Failed to detour CreateMutexA" << endl;
-		throw;
-	}
+	return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
+}
+
+void winapi::Init()
+{
+	detours::Detour(CreateWindowEx, CreateWindowExHook, "USER32::CreateWindowEx");
+	detours::Detour(FindFirstFile, FindFirstFileHook, "KERNEL32::FindFirstFile");
+	detours::Detour(GetModuleFileName, GetModuleFileNameHook, "KERNEL32::GetModuleFileName");
+	if (DISABLE_MUTEX)
+		detours::Detour(CreateMutex, CreateMutexHook, "KERNEL32::CreateMutex");
 }

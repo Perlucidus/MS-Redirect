@@ -266,14 +266,14 @@ extern "C" {
 	/////////////////////////////////////////////////// Create Process & Load Dll.
 	//
 	typedef BOOL(WINAPI *PDETOUR_CREATE_PROCESS_ROUTINEA)
-		(LPCSTR lpApplicationName,
-			LPSTR lpCommandLine,
+		(LPCTSTR lpApplicationName,
+			LPTSTR lpCommandLine,
 			LPSECURITY_ATTRIBUTES lpProcessAttributes,
 			LPSECURITY_ATTRIBUTES lpThreadAttributes,
 			BOOL bInheritHandles,
 			DWORD dwCreationFlags,
 			LPVOID lpEnvironment,
-			LPCSTR lpCurrentDirectory,
+			LPCTSTR lpCurrentDirectory,
 			LPSTARTUPINFOA lpStartupInfo,
 			LPPROCESS_INFORMATION lpProcessInformation);
 
@@ -289,18 +289,18 @@ extern "C" {
 			LPSTARTUPINFOW lpStartupInfo,
 			LPPROCESS_INFORMATION lpProcessInformation);
 
-	BOOL WINAPI DetourCreateProcessWithDllA(LPCSTR lpApplicationName,
-		__in_z LPSTR lpCommandLine,
+	BOOL WINAPI DetourCreateProcessWithDllA(LPCTSTR lpApplicationName,
+		__in_z LPTSTR lpCommandLine,
 		LPSECURITY_ATTRIBUTES lpProcessAttributes,
 		LPSECURITY_ATTRIBUTES lpThreadAttributes,
 		BOOL bInheritHandles,
 		DWORD dwCreationFlags,
 		LPVOID lpEnvironment,
-		LPCSTR lpCurrentDirectory,
+		LPCTSTR lpCurrentDirectory,
 		LPSTARTUPINFOA lpStartupInfo,
 		LPPROCESS_INFORMATION lpProcessInformation,
-		LPCSTR lpDetouredDllFullName,
-		LPCSTR lpDllName,
+		LPCTSTR lpDetouredDllFullName,
+		LPCTSTR lpDllName,
 		PDETOUR_CREATE_PROCESS_ROUTINEA
 		pfCreateProcessA);
 
@@ -314,8 +314,8 @@ extern "C" {
 		LPCWSTR lpCurrentDirectory,
 		LPSTARTUPINFOW lpStartupInfo,
 		LPPROCESS_INFORMATION lpProcessInformation,
-		LPCSTR lpDetouredDllFullName,
-		LPCSTR lpDllName,
+		LPCTSTR lpDetouredDllFullName,
+		LPCTSTR lpDllName,
 		PDETOUR_CREATE_PROCESS_ROUTINEW
 		pfCreateProcessW);
 
@@ -375,7 +375,7 @@ LONG InterlockedCompareExchange(LONG *ptr, LONG nval, LONG oval)
 typedef LPAPI_VERSION(NTAPI *PF_ImagehlpApiVersionEx)(LPAPI_VERSION AppVersion);
 
 typedef BOOL(NTAPI *PF_SymInitialize)(IN HANDLE hProcess,
-	IN LPCSTR UserSearchPath,
+	IN LPCTSTR UserSearchPath,
 	IN BOOL fInvadeProcess);
 typedef DWORD(NTAPI *PF_SymSetOptions)(IN DWORD SymOptions);
 typedef DWORD(NTAPI *PF_SymGetOptions)(VOID);
@@ -389,7 +389,7 @@ typedef BOOL(NTAPI *PF_SymGetModuleInfo64)(IN HANDLE hProcess,
 	IN DWORD64 qwAddr,
 	OUT PIMAGEHLP_MODULE64 ModuleInfo);
 typedef BOOL(NTAPI *PF_SymFromName)(IN HANDLE hProcess,
-	IN LPSTR Name,
+	IN LPTSTR Name,
 	OUT PSYMBOL_INFO Symbol);
 
 typedef struct _DETOUR_SYM_INFO

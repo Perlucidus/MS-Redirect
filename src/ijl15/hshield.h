@@ -78,11 +78,11 @@ namespace hshield {
 		HS_CheckHackShieldRunningStatus = 34
 	};
 
-	int __stdcall AhnHS_ServiceDispatch_Hook(unsigned int code, void** params, unsigned int* error);
+	int __stdcall AhnHS_ServiceDispatchHook(unsigned int code, void** params, unsigned int* error);
 	int __stdcall _AhnHS_CallbackProc();
 
-	void DetourAhnHS_ServiceDispatch();
-	void DetourCreateProcess();
+	BOOL WINAPI CreateProcessHook(LPCTSTR, LPTSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES,
+		BOOL, DWORD, LPVOID, LPCTSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION);
 
 	void BypassHShield();
 }

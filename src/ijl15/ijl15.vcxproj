@@ -24,6 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ijl15</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>ijl15</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -150,8 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="crc.h" />
+    <ClInclude Include="dinput8.h" />
     <ClInclude Include="hshield.h" />
-    <ClInclude Include="memory.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detours_util.h" />
     <ClInclude Include="ijl15.h" />
@@ -164,8 +167,10 @@
     <ClInclude Include="wzcrypto.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="crc.cpp" />
+    <ClCompile Include="dinput8.cpp" />
     <ClCompile Include="hshield.cpp" />
-    <ClCompile Include="memory.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="detours_util.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ijl15.cpp" />
